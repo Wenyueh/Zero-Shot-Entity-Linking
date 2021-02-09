@@ -242,14 +242,14 @@ def load_zeshel_data(data_path):
 
     def load_mention_candidate_pairs(part):
         mentions = []
-        with open(data_path + "/mentions/" + part + ".json", "r") as f:
+        with open(data_path + "/mentions/" + part, "r") as f:
             for line in f:
                 one_mention = json.loads(line)
                 mentions.append(one_mention)
 
         candidates = []
-        with open(data_path + "/tfidf_candidates/" + part + ".json", "r") as f:
-            for i, line in f:
+        with open(data_path + "/tfidf_candidates/" + part, "r") as f:
+            for i, line in enumerate(f):
                 one_candidate = json.loads(line)
                 candidates.append(one_candidate)
                 assert one_candidate["mention_id"] == mentions[i]["mention_id"]

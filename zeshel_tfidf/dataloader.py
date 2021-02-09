@@ -129,7 +129,7 @@ class ZeshelDataset(Dataset):
     def __len__(self):
         return len(self.mention_candidate_pairs)
 
-    def __getitem(self, index):
+    def __getitem__(self, index):
         mention, candidates = self.samples[index]
         window, start_idx, end_idx = self.get_mention_window(mention)
         start_idx += 1

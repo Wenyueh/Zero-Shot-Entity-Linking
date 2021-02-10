@@ -13,24 +13,24 @@ class test_get_window(unittest.TestCase):
         self.assertEqual(
             window,
             [1, 2, 3, 4],
-            "window wrong with max length even, window tokens longer than max length",
+            "window wrong with max length even, window longer than max length",
         )
         self.assertEqual(
             [start, end],
             [0, 3],
-            "start position wrong with max length even, window tokens longer than max length",
+            "start position wrong with max length even, window longer than max length",
         )
 
         window, start, end = get_window([1, 2, 3, 4, 5], [0, 1, 0], [1, 0, 1], 5)
         self.assertEqual(
             window,
             [1, 2, 3, 4, 5],
-            "window wrong with max length odd, window tokens longer than max length",
+            "window wrong with max length odd, window longer than max length",
         )
         self.assertEqual(
             [start, end],
             [0, 4],
-            "start or end position wrong with max length odd, window tokens longer than max length",
+            "start or end position wrong with max length odd, window longer than max length",
         )
 
     def test_long_prefix_long_suffix(self):
@@ -48,12 +48,14 @@ class test_get_window(unittest.TestCase):
 
         window, start, end = get_window([1, 2], [0, 1, 0], [1, 0, 1], 5)
         self.assertEqual(
-            window, [0, 1, 1, 2, 1], "window wrong with max length odd, long suffix",
+            window,
+            [1, 0, 1, 2, 1],
+            "window wrong with max length odd, long prefix, long suffix",
         )
         self.assertEqual(
             [start, end],
             [2, 3],
-            "start or end position wrong with max length odd, long suffix",
+            "start or end position wrong with max length odd, long prefix, long suffix",
         )
 
     def test_long_prefix_short_suffix(self):

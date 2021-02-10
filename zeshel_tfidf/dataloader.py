@@ -223,7 +223,7 @@ def get_window(mention_tokens, prefix, suffix, max_len_mention):
     if len(suffix) <= context_length:
         prefix = prefix[-(max_len_mention - mention_length - len(suffix)) :]
     else:
-        prefix = prefix[:context_length]
+        prefix = prefix[-context_length:]
 
     window = prefix + mention_tokens + suffix
     window = window[:max_len_mention]

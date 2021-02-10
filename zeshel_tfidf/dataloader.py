@@ -213,7 +213,7 @@ class ZeshelDataset(Dataset):
 
 def get_window(mention_tokens, prefix, suffix, max_len_mention):
     if len(mention_tokens) >= max_len_mention:
-        return mention_tokens, 0, len(mention_tokens) - 1
+        return mention_tokens[:max_len_mention], 0, max_len_mention - 1
 
     mention_length = len(mention_tokens)
 
@@ -223,7 +223,7 @@ def get_window(mention_tokens, prefix, suffix, max_len_mention):
     if len(suffix) <= context_length:
         prefix = prefix[-(max_len_mention - mention_length - len(suffix)) :]
     else:
-        prefix = prefix[-context_length:]
+        prefix = prefix[:context_length]
 
     window = prefix + mention_tokens + suffix
     window = window[:max_len_mention]

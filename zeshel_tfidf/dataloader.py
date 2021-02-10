@@ -207,25 +207,26 @@ class ZeshelDataset(Dataset):
         ]
         prefix = self.tokenizer.tokenize(" ".join(prefix))
         suffix = self.tokenizer.tokenize(" ".join(suffix))
-        
-        return get_window(mention_tokens, prefix, suffix, max_len_mention)
-       
+
+        return get_window(mention_tokens, prefix, suffix, self.max_len_mention)
+
+
 def get_window(mention_tokens, prefix, suffix, max_len_mention):
-    if len(mention_tokens) >= self.max_len_mention:
+    if len(mention_tokens) >= max_len_mention:
         return mention_tokens, 0, len(mention_tokens) - 1
 
     mention_length = len(mention_tokens)
 
     # compute the prefix tokens and suffix tokens
-    context_length = math.ceil((self.max_len_mention - mention_length) / 2)
+    context_length = math.ceil((max_len_mention - mention_length) / 2)
 
     if len(suffix) <= context_length:
-        prefix = prefix[-(self.max_len_mention - mention_length - len(suffix)) :]
+        prefix = prefix[-(max_len_mention - mention_length - len(suffix)) :]
     else:
         prefix = prefix[-context_length:]
 
     window = prefix + mention_tokens + suffix
-    window = window[: self.max_len_mention]
+    window = window[:max_len_mention]
 
     start = len(prefix)
     end = len(prefix) + mention_length - 1

@@ -5,7 +5,7 @@ import unittest
 
 
 class test_get_window(unittest.TestCase):
-    def setUP(self):
+    def setUp(self):
         pass
 
     def test_long_mention(self):

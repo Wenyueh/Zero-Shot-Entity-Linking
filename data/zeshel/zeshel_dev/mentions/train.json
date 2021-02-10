@@ -1,4 +1,0 @@
-{"category": "LOW_OVERLAP", "text": "besieged Antioch", "end_index": 615, "context_document_id": "17E2687A61CE4D45", "label_document_id": "925ED6501F6D4BD6", "mention_id": "04118548A2FEB09B", "corpus": "military", "start_index": 614}
-{"category": "LOW_OVERLAP", "text": "Amasis , Ophidian", "end_index": 567, "context_document_id": "DF1F3355A93D5403", "label_document_id": "9E27BA870F6694D0", "mention_id": "3217033630813FEC", "corpus": "pro_wrestling", "start_index": 565}
-{"category": "MULTIPLE_CATEGORIES", "text": "Mistfall", "end_index": 8520, "context_document_id": "0D8169B46F1B9C66", "label_document_id": "FD6D03518AF74C28", "mention_id": "FA09B666B5E26947", "corpus": "doctor_who", "start_index": 8520}
-{"category": "MULTIPLE_CATEGORIES", "text": "Doman Beruss", "end_index": 3260, "context_document_id": "C2E43F49F10B4937", "label_document_id": "92800CB1738C860F", "mention_id": "1922587F4C90C2C9", "corpus": "starwars", "start_index": 3259}

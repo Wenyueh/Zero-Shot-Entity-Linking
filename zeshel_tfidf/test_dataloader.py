@@ -4,11 +4,11 @@ from dataloader import get_window
 import unittest
 
 
-class test_get_window(unittest.TestCase):
+class TestDataloader(unittest.TestCase):
     def setUP(self):
         pass
 
-    def test_long_mention(self):
+    def test_get_window_long_mention(self):
         window, start, end = get_window([1, 2, 3, 4, 5], [0, 1, 0], [1, 0, 1], 4)
         self.assertEqual(
             window,
@@ -33,7 +33,7 @@ class test_get_window(unittest.TestCase):
             "start or end position wrong with max length odd, window longer than max length",
         )
 
-    def test_long_prefix_long_suffix(self):
+    def test_get_window_long_prefix_long_suffix(self):
         window, start, end = get_window([1, 2], [0, 1, 0], [1, 0, 1], 4)
         self.assertEqual(
             window,
@@ -58,7 +58,7 @@ class test_get_window(unittest.TestCase):
             "start or end position wrong with max length odd, long prefix, long suffix",
         )
 
-    def test_long_prefix_short_suffix(self):
+    def test_get_window_long_prefix_short_suffix(self):
         window, start, end = get_window([1, 2], [0, 1, 0, 1, 0], [1], 6)
         self.assertEqual(
             window,
@@ -83,7 +83,7 @@ class test_get_window(unittest.TestCase):
             "start or end position wrong with max length odd, long prefix, short suffix",
         )
 
-    def test_short_prefix_long_suffix(self):
+    def test_get_window_short_prefix_long_suffix(self):
         window, start, end = get_window([1, 2], [0, 1], [1, 0, 1, 0, 1], 6)
         self.assertEqual(
             window,
@@ -108,7 +108,7 @@ class test_get_window(unittest.TestCase):
             "start or end position wrong with max length odd, short prefix, long suffix",
         )
 
-    def test_short_prefix_short_suffix(self):
+    def test_get_window_short_prefix_short_suffix(self):
         window, start, end = get_window([1, 2], [0, 1], [1], 6)
         self.assertEqual(
             window,

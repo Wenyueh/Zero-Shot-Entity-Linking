@@ -197,9 +197,6 @@ class ZeshelDataset(Dataset):
         else:
             mention_tokens = self.tokenizer.tokenize(mention["text"])
 
-        if len(mention_tokens) >= self.max_len_mention:
-            return mention_tokens, 0, len(mention_tokens) - 1
-
         prefix = tokens[
             max(mention["start_index"] - self.max_len_mention, 0) : mention[
                 "start_index"
@@ -210,24 +207,30 @@ class ZeshelDataset(Dataset):
         ]
         prefix = self.tokenizer.tokenize(" ".join(prefix))
         suffix = self.tokenizer.tokenize(" ".join(suffix))
+        
+        return get_window(mention_tokens, prefix, suffix, max_len_mention)
+       
+def get_window(mention_tokens, prefix, suffix, max_len_mention):
+    if len(mention_tokens) >= self.max_len_mention:
+        return mention_tokens, 0, len(mention_tokens) - 1
 
-        mention_length = len(mention_tokens)
+    mention_length = len(mention_tokens)
 
-        # compute the prefix tokens and suffix tokens
-        context_length = math.ceil((self.max_len_mention - mention_length) / 2)
+    # compute the prefix tokens and suffix tokens
+    context_length = math.ceil((self.max_len_mention - mention_length) / 2)
 
-        if len(suffix) <= context_length:
-            prefix = prefix[-(self.max_len_mention - mention_length - len(suffix)) :]
-        else:
-            prefix = prefix[-context_length:]
+    if len(suffix) <= context_length:
+        prefix = prefix[-(self.max_len_mention - mention_length - len(suffix)) :]
+    else:
+        prefix = prefix[-context_length:]
 
-        window = prefix + mention_tokens + suffix
-        window = window[: self.max_len_mention]
+    window = prefix + mention_tokens + suffix
+    window = window[: self.max_len_mention]
 
-        start = len(prefix)
-        end = len(prefix) + mention_length - 1
+    start = len(prefix)
+    end = len(prefix) + mention_length - 1
 
-        return window, start, end
+    return window, start, end
 
 
 def load_zeshel_data(data_path):
@@ -256,15 +259,17 @@ def load_zeshel_data(data_path):
         return zip(mentions, candidates)
 
     documents = load_documents(data_path)
-    mention_candidates = []
-    for part in ["train", "heldout_train_seen", "heldout_train_unseen", "val", "test"]:
-        mention_candidates.append(load_mention_candidate_pairs(part))
+    sample_train = load_mention_candidate_pairs("train")
+    sample_heldout_train_seen = load_mention_candidate_pairs("heldout_train_seen")
+    sample_heldout_train_unseen = load_mention_candidate_pairs("heldout_train_unseen")
+    sample_val = load_mention_candidate_pairs("val")
+    sample_test = load_mention_candidate_pairs("test")
 
     return (
         documents,
-        mention_candidates[0],
-        mention_candidates[1],
-        mention_candidates[2],
-        mention_candidates[3],
-        mention_candidates[4],
+        sample_train,
+        sample_heldout_train_seen,
+        sample_heldout_train_unseen,
+        sample_val,
+        sample_test,
     )

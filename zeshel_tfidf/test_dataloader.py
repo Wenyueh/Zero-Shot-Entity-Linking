@@ -5,7 +5,7 @@ import unittest
 
 
 class TestDataloader(unittest.TestCase):
-    def setUP(self):
+    def setUp(self):
         pass
 
     def test_get_window_long_mention(self):

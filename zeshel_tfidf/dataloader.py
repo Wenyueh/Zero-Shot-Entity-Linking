@@ -238,7 +238,7 @@ def load_zeshel_data(data_path):
     def load_documents(data_path):
         documents = {}
         for fname in os.listdir(data_path + "/documents"):
-            with open(data_path + "/documents/" + fname + ".json", "r") as f:
+            with open(data_path + "/documents/" + fname, "r") as f:
                 for line in f:
                     one_document = json.loads(line)
                     documents[one_document["document_id"]] = one_document
@@ -246,13 +246,13 @@ def load_zeshel_data(data_path):
 
     def load_mention_candidate_pairs(part):
         mentions = []
-        with open(data_path + "/mentions/" + part, "r") as f:
+        with open(data_path + "/mentions/" + part + ".json", "r") as f:
             for line in f:
                 one_mention = json.loads(line)
                 mentions.append(one_mention)
 
         candidates = []
-        with open(data_path + "/tfidf_candidates/" + part, "r") as f:
+        with open(data_path + "/tfidf_candidates/" + part + ".json", "r") as f:
             for i, line in enumerate(f):
                 one_candidate = json.loads(line)
                 candidates.append(one_candidate)
@@ -274,3 +274,18 @@ def load_zeshel_data(data_path):
         sample_val,
         sample_test,
     )
+
+
+if __name__ == "__main__":
+    data_path = "../data/zeshel/zeshel_dev"
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    (
+        documents,
+        sample_train,
+        sample_heldout_train_seen,
+        sample_heldout_train_unseen,
+        sample_val,
+        sample_test,
+    ) = load_zeshel_data(data_path)
+    dataset = ZeshelDataset(documents, sample_test, 3, 70, tokenizer, False, True)
+    print(dataset[0])

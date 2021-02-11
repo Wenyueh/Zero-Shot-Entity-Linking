@@ -274,18 +274,3 @@ def load_zeshel_data(data_path):
         sample_val,
         sample_test,
     )
-
-
-if __name__ == "__main__":
-    data_path = "../data/zeshel/zeshel_dev"
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-    (
-        documents,
-        sample_train,
-        sample_heldout_train_seen,
-        sample_heldout_train_unseen,
-        sample_val,
-        sample_test,
-    ) = load_zeshel_data(data_path)
-    dataset = ZeshelDataset(documents, sample_test, 3, 70, tokenizer, False, True)
-    print(dataset[0])

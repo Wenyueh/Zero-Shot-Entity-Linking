@@ -4,28 +4,25 @@ import torch.nn as nn
 
 
 class Zeshel(nn.Module):
-    def __init__(self, encoder, device):
+    def __init__(self, encoder):
         super().__init__()
         self.encoder = encoder
-        self.hidden_dim = self.encoder.config.hidden_size
+        self.hidden_dim = encoder.config.hidden_size
         self.scorelayer = nn.Sequential(
             nn.Dropout(p=0.1), nn.Linear(self.hidden_dim, 1)
         )
         self.loss_fct = nn.CrossEntropyLoss(reduction="mean")
-        self.device = device
 
         # initialize score layer
+        # self.scorelayer[1].weight.data.normal_(
+        # mean=0.0, std=self.encoder.config.initializer_range
+        # )
         self.scorelayer[1].weight.data.normal_(
             mean=0.0, std=self.encoder.config.initializer_range
         )
         self.scorelayer[1].bias.data.fill_(0.0)
 
     def forward(self, encoded_pairs, type_tokens, mention_masks, input_len):
-        encoded_pairs = encoded_pairs.to(self.device)  # BxC
-        type_tokens = type_tokens.to(self.device)
-        mention_masks = mention_masks.to(self.device)
-        input_len = input_len.to(self.device)  # B
-
         B, C, T = encoded_pairs.size()
 
         outputs = self.encoder(
@@ -36,14 +33,15 @@ class Zeshel(nn.Module):
         scores = self.scorelayer(outputs).unsqueeze(0).view(B, C)
 
         loss = self.loss_fct(
-            scores.masked_fill_(input_len == 0, -float(torch.inf)),
-            torch.zeros(B).long().to(self.device),
+            scores.masked_fill_(input_len == 0, float("-inf")),
+            torch.zeros(B).long().to(scores.device),
         )
 
         max_scores, predictions = scores.max(dim=1)
 
-        return {"loss": loss, "max_scores": max_scores, "predictions": predictions}
-
-
-if __name__ == "__main__":
-    pass
+        return {
+            "loss": loss,
+            "predictions": predictions,
+            "max_scores": max_scores,
+            "scores": scores,
+        }

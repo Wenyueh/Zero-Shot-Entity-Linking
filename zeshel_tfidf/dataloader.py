@@ -127,7 +127,7 @@ class ZeshelDataset(Dataset):
         self.samples = self.cull_samples(mention_candidate_pairs)
 
     def __len__(self):
-        return len(self.mention_candidate_pairs)
+        return len(self.samples)
 
     def __getitem__(self, index):
         mention, candidates = self.samples[index]
@@ -149,8 +149,8 @@ class ZeshelDataset(Dataset):
             encoded = self.tokenizer.encode_plus(
                 window,
                 candidate_prefix,
-                pad_to_max_length=self.max_len,
-                truncation=True,
+                pad_to_max_length=True,
+                max_length=self.max_len,
             )
             self.encoded_pairs[i] = torch.tensor(encoded["input_ids"])
             self.type_tokens[i] = torch.tensor(encoded["token_type_ids"])
@@ -238,7 +238,7 @@ def load_zeshel_data(data_path):
     def load_documents(data_path):
         documents = {}
         for fname in os.listdir(data_path + "/documents"):
-            with open(data_path + "/documents/" + fname + ".json", "r") as f:
+            with open(data_path + "/documents/" + fname, "r") as f:
                 for line in f:
                     one_document = json.loads(line)
                     documents[one_document["document_id"]] = one_document
@@ -246,18 +246,18 @@ def load_zeshel_data(data_path):
 
     def load_mention_candidate_pairs(part):
         mentions = []
-        with open(data_path + "/mentions/" + part, "r") as f:
+        with open(data_path + "/mentions/" + part + ".json", "r") as f:
             for line in f:
                 one_mention = json.loads(line)
                 mentions.append(one_mention)
 
         candidates = []
-        with open(data_path + "/tfidf_candidates/" + part, "r") as f:
+        with open(data_path + "/tfidf_candidates/" + part + ".json", "r") as f:
             for i, line in enumerate(f):
                 one_candidate = json.loads(line)
                 candidates.append(one_candidate)
                 assert one_candidate["mention_id"] == mentions[i]["mention_id"]
-        return zip(mentions, candidates)
+        return list(zip(mentions, candidates))
 
     documents = load_documents(data_path)
     sample_train = load_mention_candidate_pairs("train")

@@ -13,6 +13,7 @@ class Zeshel(nn.Module):
         )
         self.loss_fct = nn.CrossEntropyLoss(reduction="mean")
 
+        # initialization of the layers is specific to bert-base-uncased
         self.scorelayer[1].weight.data.normal_(
             mean=0.0, std=self.encoder.config.initializer_range
         )

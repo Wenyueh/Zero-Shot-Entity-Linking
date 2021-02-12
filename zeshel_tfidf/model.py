@@ -13,10 +13,6 @@ class Zeshel(nn.Module):
         )
         self.loss_fct = nn.CrossEntropyLoss(reduction="mean")
 
-        # initialize score layer
-        # self.scorelayer[1].weight.data.normal_(
-        # mean=0.0, std=self.encoder.config.initializer_range
-        # )
         self.scorelayer[1].weight.data.normal_(
             mean=0.0, std=self.encoder.config.initializer_range
         )
@@ -32,6 +28,8 @@ class Zeshel(nn.Module):
 
         scores = self.scorelayer(outputs).unsqueeze(0).view(B, C)
 
+        # the target is [0]*B
+        # if the input_len is 0, then the example is null
         loss = self.loss_fct(
             scores.masked_fill_(input_len == 0, float("-inf")),
             torch.zeros(B).long().to(scores.device),

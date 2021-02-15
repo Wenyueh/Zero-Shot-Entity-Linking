@@ -65,6 +65,9 @@ def construct_optimizer_simple(args, model):
     return optimizer, scheduler
 
 
+print("here")
+
+
 def eval(model, loader, num_examples):
     model.eval()
     num_correct = 0

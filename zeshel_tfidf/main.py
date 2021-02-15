@@ -58,11 +58,7 @@ def construct_optimizer(args, model, num_train_examples):
     return optimizer, scheduler
 
 
-<<<<<<< Updated upstream
-def construct_optimizer_simple(args, model, num_training_examples):
-=======
 def construct_optimizer_simple(args, model):
->>>>>>> Stashed changes
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = get_constant_schedule(model.parameters())
 
@@ -137,13 +133,7 @@ def main(args):
     if args.complex_optimizer:
         optimizer, scheduler = construct_optimizer(args, model, num_train_examples)
     else:
-<<<<<<< Updated upstream
-        optimizer, scheduler = construct_optimizer_simple(
-            args, model, num_train_examples
-        )
-=======
         optimizer, scheduler = construct_optimizer_simple(args, model)
->>>>>>> Stashed changes
 
     model.zero_grad()
     num_steps = 0

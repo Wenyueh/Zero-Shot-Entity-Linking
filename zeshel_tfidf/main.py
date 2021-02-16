@@ -10,7 +10,8 @@ from transformers import (
 )
 import torch.nn as nn
 from model import Zeshel
-from dataloader import get_loaders, load_zeshel_data
+from dataloader import get_loaders, load_zeshel_data, ZeshelDataset
+from torch.utils.data import DataLoader
 
 import random
 import numpy as np
@@ -58,7 +59,7 @@ def construct_optimizer(args, model, num_train_examples):
     return optimizer, scheduler
 
 
-def construct_optimizer_simple(args, model, num_training_examples):
+def construct_optimizer_simple(args, model):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = get_constant_schedule(model.parameters())
 
@@ -68,7 +69,6 @@ def construct_optimizer_simple(args, model, num_training_examples):
 def eval(model, loader, num_examples):
     model.eval()
     num_correct = 0
-    num_total = 0
     for i, batch in enumerate(loader):
         prediction = model(
             batch[0].to(args.device),
@@ -79,10 +79,47 @@ def eval(model, loader, num_examples):
         num_correct += torch.sum(
             prediction == torch.zeros(prediction.size(0)).to(args.device)
         )
-        num_total += prediction.size(0)
-    accuracy = (num_correct / num_examples) * 100
+        accuracy = (num_correct / num_examples) * 100
 
-    return {"accuracy": accuracy, "num_correct": num_correct, "num_total": num_total}
+    return {
+        "accuracy": accuracy,
+        "num_correct": num_correct,
+        "num_total": num_examples,
+    }
+
+
+def eval_macro(model, tokenizer, data):
+    sample_test = data[5]
+    categories = {}
+    for mc in sample_test:
+        if mc[0]["corpus"] not in categories:
+            categories[mc[0]["corpus"]] = {}
+
+    averaged_accuracy = 0
+    for cat in categories.keys():
+        domain_sample = []
+        for mc in sample_test:
+            if mc[0]["corpus"] == cat:
+                domain_sample.append(mc)
+        dataset = ZeshelDataset(
+            data[0],
+            domain_sample,
+            args.max_candidates,
+            args.max_len,
+            tokenizer,
+            False,
+            True,
+        )
+        num_examples = len(domain_sample)
+        dataloader = DataLoader(
+            dataset, batch_size=args.batch, num_workers=args.num_worker, shuffle=False,
+        )
+        categories[cat] = eval(model, dataloader, num_examples)
+        averaged_accuracy += categories[cat]["accuracy"]
+
+    averaged_accuracy = averaged_accuracy / len(categories)
+
+    return averaged_accuracy, categories
 
 
 def load_model(args, eval_mode):
@@ -133,9 +170,7 @@ def main(args):
     if args.complex_optimizer:
         optimizer, scheduler = construct_optimizer(args, model, num_train_examples)
     else:
-        optimizer, scheduler = construct_optimizer_simple(
-            args, model, num_train_examples
-        )
+        optimizer, scheduler = construct_optimizer_simple(args, model)
 
     model.zero_grad()
     num_steps = 0
@@ -164,7 +199,7 @@ def main(args):
         loss_value = 0
 
         train_eval_result = eval(model, train_loader, num_train_examples)
-        val_eval_result = eval(model, train_loader, num_val_examples)
+        val_eval_result = eval(model, val_loader, num_val_examples)
         print("training accuracy is {}".format(train_eval_result["accuracy"]))
         print("validation accuracy is {}".format(val_eval_result["accuracy"]))
 
@@ -180,8 +215,8 @@ def main(args):
 
     # load and test
     model = load_model(args, eval_mode=True)
-    test_result = eval(model, test_loader, num_test_examples)
-    print("test accuracy is {}".format(test_result["accuracy"]))
+    test_result = eval_macro(model, tokenizer, data)
+    print("test accuracy is {}".format(test_result[0]))
 
 
 if __name__ == "__main__":
@@ -200,7 +235,7 @@ if __name__ == "__main__":
     parser.add_argument("--clip", default=1)
     parser.add_argument("--warm_up_proportion", default=0.1)
     parser.add_argument("--batch", default=1)
-    parser.add_argument("--epoch", default=3)
+    parser.add_argument("--epoch", default=1)
     parser.add_argument("--complex_optimizer", default=True)
 
     parser.add_argument("--device", default="cuda")

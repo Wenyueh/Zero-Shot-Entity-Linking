@@ -119,8 +119,6 @@ def eval_macro(model, tokenizer, data):
 
     averaged_accuracy = averaged_accuracy / len(categories)
 
-    print("here is the test_result: {}".format(categories))
-
     return averaged_accuracy, categories
 
 

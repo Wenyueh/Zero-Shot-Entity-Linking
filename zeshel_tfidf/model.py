@@ -27,14 +27,11 @@ class Zeshel(nn.Module):
             token_type_ids=type_tokens.view(-1, T).long(),
         )[1]
 
-        scores = self.scorelayer(outputs).unsqueeze(0).view(B, C)
-
+        scores = self.scorelayer(outputs).unsqueeze(1).view(B, C)
+        scores = scores.masked_fill_(input_len == 0, float("-inf"))
         # the target is [0]*B
         # if the input_len is 0, then the example is null
-        loss = self.loss_fct(
-            scores.masked_fill_(input_len == 0, float("-inf")),
-            torch.zeros(B).long().to(scores.device),
-        )
+        loss = self.loss_fct(scores, torch.zeros(B).long().to(scores.device))
 
         max_scores, predictions = scores.max(dim=1)
 

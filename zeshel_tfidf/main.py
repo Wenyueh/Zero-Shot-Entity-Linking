@@ -12,7 +12,7 @@ import torch.nn as nn
 from model import Zeshel
 from dataloader import get_loaders, load_zeshel_data, ZeshelDataset
 from torch.utils.data import DataLoader
-from macroeval import evaluate
+from macroaveeval import macro_averaged_evaluate
 
 import random
 import numpy as np
@@ -68,7 +68,7 @@ def construct_optimizer_simple(args, model):
     return optimizer, scheduler
 
 
-def return_predictions(args, model, tokenizer, data, sample_data):
+def return_predictions_targets(args, model, tokenizer, data, sample_data):
     model.eval()
 
     categories = []
@@ -77,6 +77,7 @@ def return_predictions(args, model, tokenizer, data, sample_data):
             categories.append(mc[0]["corpus"])
 
     predictions = []
+    targets = []
     for cat in categories:
         domain_sample = []
         for mc in sample_data:
@@ -103,9 +104,10 @@ def return_predictions(args, model, tokenizer, data, sample_data):
                 batch[3].to(args.device),
             )["predictions"]
             prediction = torch.cat((prediction, batch_prediction), dim=0)
-        predictions.append(prediction)
+        predictions.append(prediction.tolist())
+        targets.append(torch.zeros(prediction.size()).tolist())
 
-    return predictions
+    return predictions, targets
 
 
 def load_model(args, dp, eval_mode):
@@ -195,12 +197,19 @@ def main(args):
                 num_steps += 1
         loss_value = 0
 
-        train_predictions = return_predictions(args, model, tokenizer, data, data[1])
-        train_accuracy = evaluate(train_predictions)
-        val_predictions = return_predictions(args, model, tokenizer, data, data[3])
-        val_accuracy = evaluate(val_predictions)
-        print("training accuracy is {}".format(train_accuracy))
-        print("validation accuracy is {}".format(val_accuracy))
+        train_predictions, train_targets = return_predictions_targets(
+            args, model, tokenizer, data, data[1]
+        )
+        train_accuracy = macro_averaged_evaluate(train_predictions, train_targets)
+        val_predictions, val_targets = return_predictions_targets(
+            args, model, tokenizer, data, data[3]
+        )
+        val_accuracy = macro_averaged_evaluate(val_predictions, val_targets)
+        print(
+            "for epoch {}, training accuracy is {}, validation accuracy is {}".format(
+                epoch_num, train_accuracy, val_accuracy
+            )
+        )
 
         if val_accuracy > best_val_perf:
             torch.save(
@@ -214,8 +223,10 @@ def main(args):
 
     # load and test
     model = load_model(args, dp, eval_mode=True)
-    test_predictions = return_predictions(args, model, tokenizer, data, data[4])
-    test_accuracy = evaluate(test_predictions)
+    test_predictions, test_targets = return_predictions_targets(
+        args, model, tokenizer, data, data[4]
+    )
+    test_accuracy = macro_averaged_evaluate(test_predictions, test_targets)
     print("test accuracy is {}".format(test_accuracy))
 
 

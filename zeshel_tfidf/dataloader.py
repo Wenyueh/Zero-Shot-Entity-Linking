@@ -149,8 +149,9 @@ class ZeshelDataset(Dataset):
             encoded = self.tokenizer.encode_plus(
                 window,
                 candidate_prefix,
-                pad_to_max_length=True,
+                padding="max_length",
                 max_length=self.max_len,
+                truncation=True,
             )
             self.encoded_pairs[i] = torch.tensor(encoded["input_ids"])
             self.type_tokens[i] = torch.tensor(encoded["token_type_ids"])

@@ -184,7 +184,6 @@ def main(args):
             )["loss"]
             if dp:
                 loss = torch.mean(loss, dim=0)
-            print("this is the loss {}".format(loss))
             loss.backward()
             loss_value += loss.item()
 

@@ -11,7 +11,7 @@ class Zeshel(nn.Module):
         self.scorelayer = nn.Sequential(
             nn.Dropout(p=0.1), nn.Linear(self.hidden_dim, 1)
         )
-        self.loss_fct = nn.CrossEntropyLoss(reduction="mean")
+        self.loss_fct = nn.CrossEntropyLoss(reduction="sum")
 
         # initialization of the layers is specific to bert-base-uncased
         self.scorelayer[1].weight.data.normal_(

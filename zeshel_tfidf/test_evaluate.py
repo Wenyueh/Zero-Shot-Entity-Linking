@@ -1,8 +1,8 @@
 import unittest
-from macroaveeval import macro_averaged_evaluate
+from evaluate import macro_averaged_evaluate
 
 
-class TestMacroAveEval(unittest.TestCase):
+class TestEvaluate(unittest.TestCase):
     def setUp(self):
         self.predictions = [
             [0, 1, 0, 1, 0, 1],

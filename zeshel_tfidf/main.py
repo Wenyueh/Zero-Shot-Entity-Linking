@@ -12,7 +12,7 @@ import torch.nn as nn
 from model import Zeshel
 from dataloader import get_loaders, load_zeshel_data, ZeshelDataset
 from torch.utils.data import DataLoader
-from macroaveeval import macro_averaged_evaluate
+from evaluate import macro_averaged_evaluate
 
 import random
 import numpy as np

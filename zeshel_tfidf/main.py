@@ -248,6 +248,12 @@ def main(args):
                 },
                 args.model,
             )
+            logger.log(
+                "for epoch {}, save model with validation accuracy {}".format(
+                    epoch_num, val_accuracy
+                )
+            )
+            best_val_perf = val_accuracy
 
     # load and test
     model = load_model(args, dp, eval_mode=True)

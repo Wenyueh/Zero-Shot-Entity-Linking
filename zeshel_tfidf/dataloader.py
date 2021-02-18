@@ -279,8 +279,6 @@ def load_zeshel_data(data_path):
 class Logger:
     def __init__(self, path):
         self.log_path = path
-        while os.path.isfile(self.log_path):
-            self.log_path += "+"
 
     def log(self, string, newline=True):
         with open(self.log_path, "a") as f:

@@ -10,7 +10,7 @@ from transformers import (
 )
 import torch.nn as nn
 from model import Zeshel
-from dataloader import get_loaders, load_zeshel_data, ZeshelDataset
+from dataloader import get_loaders, load_zeshel_data, ZeshelDataset, Logger
 from torch.utils.data import DataLoader
 from evaluate import macro_averaged_evaluate
 
@@ -19,10 +19,10 @@ import numpy as np
 from collections import OrderedDict
 
 
-def set_seed():
-    random.seed(42)
-    np.random.seed(42)
-    torch.manual_seed(42)
+def set_seed(args):
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
 
 
 def construct_optimizer(args, model, num_train_examples):
@@ -132,8 +132,20 @@ def load_model(args, dp, eval_mode):
     return model
 
 
+def count_parameters(model):
+    number_parameters = 0
+    for n, p in model.named_parameters():
+        if p.requires_grad:
+            number_parameters += torch.numel(p)
+
+    return number_parameters
+
+
 def main(args):
-    set_seed()
+    set_seed(args)
+
+    logger = Logger(args.model + ".log")
+    logger.log(str(args))
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     encoder = BertModel.from_pretrained("bert-base-uncased")
@@ -171,6 +183,22 @@ def main(args):
     else:
         optimizer, scheduler = construct_optimizer_simple(args, model)
 
+    logger.log("\n[Train]")
+    logger.log("train sample size: {}".format(len(data[1])))
+    logger.log("epoch number: {}".format(args.epoch))
+    logger.log("batch size: {}".format(args.batch))
+    logger.log("gradient accumulation steps: {}".format(args.accumulate_gradient_steps))
+    logger.log(
+        "effective batch size: {}".format(args.batch * args.accumulate_gradient_steps)
+    )
+    logger.log(
+        "train steps: {}".format(
+            args.epoch * len(data[1]) / (args.batch * args.accumulate_gradient_steps)
+        )
+    )
+    logger.log("learning rate: {}".format(args.lr))
+    logger.log("parameter number: {}".format(count_parameters(model)))
+
     model.zero_grad()
     num_steps = 0
     loss_value = 0
@@ -205,7 +233,7 @@ def main(args):
             args, model, tokenizer, data, data[3]
         )
         val_accuracy = macro_averaged_evaluate(val_predictions, val_targets)
-        print(
+        logger.log(
             "for epoch {}, training accuracy is {}, validation accuracy is {}".format(
                 epoch_num, train_accuracy, val_accuracy
             )
@@ -227,11 +255,13 @@ def main(args):
         args, model, tokenizer, data, data[4]
     )
     test_accuracy = macro_averaged_evaluate(test_predictions, test_targets)
-    print("test accuracy is {}".format(test_accuracy))
+    logger.log("test accuracy is {}".format(test_accuracy))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", default=42)
+
     parser.add_argument("--model", default="best_model.pt")
     parser.add_argument("--data_path", default="../data/zeshel/zeshel_dev")
     parser.add_argument("--max_candidates", default=64)

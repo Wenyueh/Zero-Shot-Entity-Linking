@@ -1,5 +1,4 @@
-#!/usr/bin/env ipython
-
+import sys
 import torch
 import os
 import json
@@ -275,3 +274,21 @@ def load_zeshel_data(data_path):
         sample_val,
         sample_test,
     )
+
+
+class Logger:
+    def __init__(self, path):
+        self.log_path = path
+        while os.path.isfile(self.log_path):
+            self.log_path += "+"
+
+    def log(self, string, newline=True):
+        with open(self.log_path, "a") as f:
+            f.write(string)
+            if newline:
+                f.write("\n")
+
+        sys.stdout.write(string)
+        if newline:
+            sys.stdout.write("\n")
+        sys.stdout.flush()

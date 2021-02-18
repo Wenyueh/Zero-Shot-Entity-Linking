@@ -104,8 +104,8 @@ def return_predictions_targets(args, model, tokenizer, data, sample_data):
                 batch[3].to(args.device),
             )["predictions"]
             prediction = torch.cat((prediction, batch_prediction), dim=0)
-        predictions.append(prediction.tolist())
-        targets.append(torch.zeros(prediction.size()).tolist())
+        predictions.append(prediction.cpu().numpy())
+        targets.append(torch.zeros(prediction.size()).cpu().numpy())
 
     return predictions, targets
 
@@ -185,7 +185,7 @@ def main(args):
                 batch[3].to(args.device),
             )["loss"]
             if dp:
-                loss = torch.mean(loss, dim=0)
+                loss = torch.mean(loss)
             loss.backward()
             loss_value += loss.item()
 

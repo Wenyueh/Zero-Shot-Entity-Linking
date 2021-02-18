@@ -1,20 +1,21 @@
 import unittest
 from evaluate import macro_averaged_evaluate
+import numpy as np
 
 
 class TestEvaluate(unittest.TestCase):
     def setUp(self):
         self.predictions = [
-            [0, 1, 0, 1, 0, 1],
-            [1, 0, 1, 1, 1],
-            [1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-            [0, 0],
+            np.array([0, 1, 0, 1, 0, 1]),
+            np.array([1, 0, 1, 1, 1]),
+            np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0]),
+            np.array([0, 0]),
         ]
         self.targets = [
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0],
+            np.array([0, 0, 0, 0, 0, 0]),
+            np.array([0, 0, 0, 0, 0]),
+            np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+            np.array([0, 0]),
         ]
         self.accuracy = 0.6
 

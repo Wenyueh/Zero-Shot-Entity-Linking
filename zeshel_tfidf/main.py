@@ -215,8 +215,11 @@ def main(args):
     loss_value = 0
     best_val_perf = 0.0
     for epoch_num in range(args.epoch):
+        used_time = 0
         for i, batch in enumerate(train_loader):
+
             start_time = time.time()
+
             model.train()
             loss = model(
                 batch[0].to(args.device),
@@ -227,7 +230,6 @@ def main(args):
             if dp:
                 loss = torch.mean(loss)
             loss.backward()
-            print("print the loss for the batch is :{}".format(loss))
             loss_value += loss.item()
 
             if (i + 1) % args.accumulate_gradient_steps == 0:
@@ -236,14 +238,24 @@ def main(args):
                 scheduler.step()
                 model.zero_grad()
                 num_steps += 1
-            torch.cuda.synchronize()
-            end_time = time.time()
-            logger.log(
-                "for epoch {} batch {}, the time used is {}".format(
-                    epoch_num, i, end_time - start_time
-                )
-            )
-        loss_value = 0
+
+                torch.cuda.synchronize()
+                end_time = time.time()
+                used_time += end_time - start_time
+
+                if num_steps % args.logging_step == 0:
+                    logger.log(
+                        "From step {} to step {}, which is epoch {} batch {}, the total time used is {}, the averaged loss value is {}".format(
+                            num_steps - args.logging_step,
+                            num_steps,
+                            epoch_num,
+                            i,
+                            used_time,
+                            loss_value / args.logging_step,
+                        )
+                    )
+                    used_time = 0
+                    loss_value = 0
 
         train_predictions, train_targets = return_predictions_targets(
             args, model, tokenizer, data, data[1]
@@ -288,7 +300,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", default=42)
 
-    parser.add_argument("--model", default="best_model_full_ilab2.pt")
+    parser.add_argument("--model", default="best_model_full.pt")
     parser.add_argument("--data_path", default="../data/zeshel/zeshel_full")
     parser.add_argument("--max_candidates", default=64)
     parser.add_argument("--max_len", default=256)
@@ -305,8 +317,9 @@ if __name__ == "__main__":
     parser.add_argument("--epoch", default=3)
     parser.add_argument("--complex_optimizer", default=True)
 
+    parser.add_argument("--logging_step", default=100)
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--gpus", type=str, default="4,5,6,7")
+    parser.add_argument("--gpus", type=str, default="0,1,2,3")
 
     args = parser.parse_args()
 

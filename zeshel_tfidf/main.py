@@ -15,6 +15,9 @@ from torch.utils.data import DataLoader
 from evaluate import macro_averaged_evaluate
 
 import random
+import math
+import os
+import time
 import numpy as np
 from collections import OrderedDict
 
@@ -49,13 +52,17 @@ def construct_optimizer(args, model, num_train_examples):
 
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
-        num_training_steps=args.epoch
-        * num_train_examples
-        / (args.batch * args.accumulate_gradient_steps),
+        num_training_steps=math.ceil(
+            args.epoch
+            * num_train_examples
+            / (args.batch * args.accumulate_gradient_steps)
+        ),
         num_warmup_steps=args.warm_up_proportion
-        * args.epoch
-        * num_train_examples
-        / (args.batch * args.accumulate_gradient_steps),
+        * math.ceil(
+            args.epoch
+            * num_train_examples
+            / (args.batch * args.accumulate_gradient_steps)
+        ),
     )
 
     return optimizer, scheduler
@@ -193,7 +200,11 @@ def main(args):
     )
     logger.log(
         "train steps: {}".format(
-            args.epoch * len(data[1]) / (args.batch * args.accumulate_gradient_steps)
+            math.ceil(
+                args.epoch
+                * len(data[1])
+                / (args.batch * args.accumulate_gradient_steps)
+            )
         )
     )
     logger.log("learning rate: {}".format(args.lr))
@@ -205,6 +216,7 @@ def main(args):
     best_val_perf = 0.0
     for epoch_num in range(args.epoch):
         for i, batch in enumerate(train_loader):
+            start_time = time.time()
             model.train()
             loss = model(
                 batch[0].to(args.device),
@@ -215,6 +227,7 @@ def main(args):
             if dp:
                 loss = torch.mean(loss)
             loss.backward()
+            print("print the loss for the batch is :{}".format(loss))
             loss_value += loss.item()
 
             if (i + 1) % args.accumulate_gradient_steps == 0:
@@ -223,6 +236,13 @@ def main(args):
                 scheduler.step()
                 model.zero_grad()
                 num_steps += 1
+            torch.cuda.synchronize()
+            end_time = time.time()
+            logger.log(
+                "for epoch {} batch {}, the time used is {}".format(
+                    epoch_num, i, end_time - start_time
+                )
+            )
         loss_value = 0
 
         train_predictions, train_targets = return_predictions_targets(
@@ -268,26 +288,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", default=42)
 
-    parser.add_argument("--model", default="best_model.pt")
-    parser.add_argument("--data_path", default="../data/zeshel/zeshel_dev")
+    parser.add_argument("--model", default="best_model_full_ilab2.pt")
+    parser.add_argument("--data_path", default="../data/zeshel/zeshel_full")
     parser.add_argument("--max_candidates", default=64)
     parser.add_argument("--max_len", default=256)
     parser.add_argument("--num_worker", default=1)
     parser.add_argument("--indicate_mention_boundary", default=True)
 
-    parser.add_argument("--lr", default=0.05)
+    parser.add_argument("--lr", default=2e-5)
     parser.add_argument("--weight_decay", default=0.01)
     parser.add_argument("--adam_epsilon", default=1e-8)
-    parser.add_argument("--accumulate_gradient_steps", default=1)
+    parser.add_argument("--accumulate_gradient_steps", default=2)
     parser.add_argument("--clip", default=1)
     parser.add_argument("--warm_up_proportion", default=0.1)
-    parser.add_argument("--batch", default=2)
-    parser.add_argument("--epoch", default=5)
+    parser.add_argument("--batch", default=4)
+    parser.add_argument("--epoch", default=3)
     parser.add_argument("--complex_optimizer", default=True)
 
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--gpus", type=str, default="0")
+    parser.add_argument("--gpus", type=str, default="4,5,6,7")
 
     args = parser.parse_args()
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
     main(args)

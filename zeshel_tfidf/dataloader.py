@@ -1,5 +1,4 @@
-#!/usr/bin/env ipython
-
+import sys
 import torch
 import os
 import json
@@ -149,8 +148,9 @@ class ZeshelDataset(Dataset):
             encoded = self.tokenizer.encode_plus(
                 window,
                 candidate_prefix,
-                pad_to_max_length=True,
+                padding="max_length",
                 max_length=self.max_len,
+                truncation=True,
             )
             self.encoded_pairs[i] = torch.tensor(encoded["input_ids"])
             self.type_tokens[i] = torch.tensor(encoded["token_type_ids"])
@@ -274,3 +274,19 @@ def load_zeshel_data(data_path):
         sample_val,
         sample_test,
     )
+
+
+class Logger:
+    def __init__(self, path):
+        self.log_path = path
+
+    def log(self, string, newline=True):
+        with open(self.log_path, "a") as f:
+            f.write(string)
+            if newline:
+                f.write("\n")
+
+        sys.stdout.write(string)
+        if newline:
+            sys.stdout.write("\n")
+        sys.stdout.flush()

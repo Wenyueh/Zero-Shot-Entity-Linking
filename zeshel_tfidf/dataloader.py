@@ -171,18 +171,17 @@ class ZeshelDataset(Dataset):
             ]
 
     def prepare_candidates(self, mention, candidates):
-        c = []
-        if self.is_training:
-            if (
-                not mention["label_document_id"]
-                in candidates["tfidf_candidates"][: self.max_candidates]
-            ):
-                c.append(mention["label_document_id"])
-        c = c + candidates["tfidf_candidates"][: self.max_candidates]
+        original_list = candidates["tfidf_candidates"][: self.max_candidates]
+        correct_label = mention["label_document_id"]
+        if self.is_training and not correct_label in original_list:
+            c = [correct_label] + original_list[: self.max_candidates - 1]
+        else:
+            assert correct_label in original_list
+            c = [correct_label] + [x for x in original_list if not x == correct_label]
 
-        assert mention["label_document_id"] in c
+        assert correct_label in c
 
-        return c[: self.max_candidates]
+        return c
 
     def get_mention_window(self, mention):
         tokens = self.documents[mention["context_document_id"]]["text"].split()
@@ -257,6 +256,7 @@ def load_zeshel_data(data_path):
                 one_candidate = json.loads(line)
                 candidates.append(one_candidate)
                 assert one_candidate["mention_id"] == mentions[i]["mention_id"]
+
         return list(zip(mentions, candidates))
 
     documents = load_documents(data_path)

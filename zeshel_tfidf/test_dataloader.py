@@ -1,7 +1,5 @@
-#!/usr/bin/env ipython
-
-from dataloader import get_window
 import unittest
+from dataloader import get_window
 
 
 class TestDataloader(unittest.TestCase):

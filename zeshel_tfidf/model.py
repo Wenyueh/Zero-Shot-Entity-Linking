@@ -11,13 +11,13 @@ class Zeshel(nn.Module):
         self.scorelayer = nn.Sequential(
             nn.Dropout(p=0.1), nn.Linear(self.hidden_dim, 1)
         )
-        self.loss_fct = nn.CrossEntropyLoss(reduction="sum")
+        self.loss_fct = nn.CrossEntropyLoss(reduction="mean")
 
         # initialization of the layers is specific to bert-base-uncased
         self.scorelayer[1].weight.data.normal_(
             mean=0.0, std=self.encoder.config.initializer_range
         )
-        self.scorelayer[1].bias.data.fill_(0.0)
+        self.scorelayer[1].bias.data.zero_()
 
     def forward(self, encoded_pairs, type_tokens, mention_masks, input_len):
         B, C, T = encoded_pairs.size()
